@@ -1,77 +1,110 @@
 package com.example.redalert;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 public class MainActivity extends AppCompatActivity {
 
-    private EditText secretCodeEditText;
-    private Button submitButton;
+    private boolean exitApp = false;
 
-    @SuppressLint("MissingInflatedId")
+    // Location variables
+    private LocationManager locationManager;
+    private LocationListener locationListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        secretCodeEditText = findViewById(R.id.secretCodeEditText);
-        submitButton = findViewById(R.id.submitButton);
+        Button btnCodeRed = findViewById(R.id.btnCodeRed);
+        Button btnAlert = findViewById(R.id.btnAlert);
+        Button btnHelp = findViewById(R.id.btnHelp);
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) Button btnGetData = findViewById(R.id.btnGetData);
 
-        submitButton.setOnClickListener(new View.OnClickListener() {
+        // Initialize LocationManager and LocationListener
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                // This method will be called when the user's location changes.
+                // You can get the latitude and longitude from the 'location' object.
+                double latitude = location.getLatitude();
+                double longitude = location.getLongitude();
+                // Do something with the latitude and longitude (e.g., display it in a Toast)
+                Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude: " + longitude, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            @Override
+            public void onProviderEnabled(String provider) {}
+
+            @Override
+            public void onProviderDisabled(String provider) {}
+        };
+
+        btnCodeRed.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String enteredCode = secretCodeEditText.getText().toString();
-                String secretCode = "hello"; // Replace with the secret code you provided to users.
-
-                if (enteredCode.equals(secretCode)) {
-                    // Code is correct, proceed to the next activity
-                    navigateToNextActivity();
-                    Toast.makeText(MainActivity.this, "You are a authorised user !", Toast.LENGTH_SHORT).show();
-                } else {
-                    // Code is incorrect, show an error message
-                    Toast.makeText(MainActivity.this, "Incorrect code. Try again.", Toast.LENGTH_SHORT).show();
-                }
+                // Add code to handle the "Code Red" button click event here
             }
         });
 
-        // Check if authentication already held once on this device
-        if (isAuthenticationHeldOnce()) {
-            // Authentication already succeeded before, proceed to the next activity
-            navigateToNextActivity();
+        btnAlert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Add code to handle the "Alert" button click event here
+            }
+        });
+
+        btnHelp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Add code to handle the "Help!" button click event here
+            }
+        });
+
+        btnGetData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Check for location permissions
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    // Request location updates
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+                } else {
+                    // Request location permissions if not granted
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (exitApp) {
+            finishAffinity(); // Finish all activities in the task stack
+        } else {
+            Toast.makeText(this, "Press Back again to exit", Toast.LENGTH_SHORT).show();
+            exitApp = true;
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    exitApp = false;
+                }
+            }, 2000); // Reset the flag after 2 seconds (adjust as needed)
         }
-    }
-
-    private void navigateToNextActivity() {
-        // Mark that authentication has been held once in this device
-        markAuthenticationHeldOnce();
-
-        // Navigate to the NextActivity
-        // You need to replace NextActivity.class with the actual class of the NextActivity you want to open.
-        // For example: Intent intent = new Intent(this, NextActivity.class);
-        //               startActivity(intent);
-        Intent intent = new Intent(this, AlertActivity.class);
-        startActivity(intent);
-
-    }
-
-    private void markAuthenticationHeldOnce() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("authentication_held_once", true);
-        editor.apply();
-    }
-
-    private boolean isAuthenticationHeldOnce() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        return preferences.getBoolean("authentication_held_once", false);
     }
 }
