@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+<!--    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />-->
 
     <application
         android:allowBackup="true"
@@ -16,7 +16,7 @@
         android:theme="@style/Theme.RedAlert"
         tools:targetApi="31">
         <activity
-            android:name=".AlertActivity"
+            android:name=".AuthActivity"
             android:exported="false" />
         <activity
             android:name=".SplashActivity"
@@ -29,8 +29,8 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false"></activity>
+
     </application>
 
 </manifest>
