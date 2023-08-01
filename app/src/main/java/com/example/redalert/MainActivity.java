@@ -15,6 +15,15 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.example.redalert.api.LocationApiService;
+import com.example.redalert.api.LocationData;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity {
 
     private boolean exitApp = false;
@@ -22,6 +31,9 @@ public class MainActivity extends AppCompatActivity {
     // Location variables
     private LocationManager locationManager;
     private LocationListener locationListener;
+
+    // Define your backend server URL here
+    private static final String BASE_URL = "http://your_backend_server_url/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
                 double longitude = location.getLongitude();
                 // Do something with the latitude and longitude (e.g., display it in a Toast)
                 Toast.makeText(MainActivity.this, "Latitude: " + latitude + ", Longitude: " + longitude, Toast.LENGTH_SHORT).show();
+
+                // Send location data to the backend server
+                sendLocationDataToServer(latitude, longitude);
             }
 
             @Override
@@ -92,19 +107,34 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    public void onBackPressed() {
-        if (exitApp) {
-            finishAffinity(); // Finish all activities in the task stack
-        } else {
-            Toast.makeText(this, "Press Back again to exit", Toast.LENGTH_SHORT).show();
-            exitApp = true;
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    exitApp = false;
+    private void sendLocationDataToServer(double latitude, double longitude) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        LocationApiService locationApiService = retrofit.create(LocationApiService.class);
+        LocationData locationData = new LocationData(latitude, longitude);
+
+        retrofit2.Call<Void> call = locationApiService.sendLocationData(locationData); // Use the fully qualified name here
+        call.enqueue(new retrofit2.Callback<Void>() { // Use the fully qualified name here as well
+            @Override
+            public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // Location data sent successfully
+                    Toast.makeText(MainActivity.this, "Location data sent to server", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Handle error
+                    Toast.makeText(MainActivity.this, "Failed to send location data", Toast.LENGTH_SHORT).show();
                 }
-            }, 2000); // Reset the flag after 2 seconds (adjust as needed)
-        }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<Void> call, Throwable t) {
+                // Handle failure
+                Toast.makeText(MainActivity.this, "Failed to send location data", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
 }
